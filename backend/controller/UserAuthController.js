@@ -50,12 +50,14 @@ const signInUser = async (request, response) => {
 
   try {
     const user = await UserModel.findOne({ email });
+    console.log("User:", user); // Log user details for debugging
     if (!user) {
       return response.status(401).json({
         message: "user not found",
       });
     }
     const authUser = await bcrypt.compare(password, user.password);
+    console.log("Auth User:", authUser); // Log authentication result for debugging
     if (!authUser) {
       return response.status(401).json({
         message: "incorrect password",
@@ -67,9 +69,10 @@ const signInUser = async (request, response) => {
       { expiresIn: "24h" }
     );
 
-    return response.status(201).json({
+    return response.status(200).json({
       message: "user loggedIn",
       jwt: token,
+      data: user.email,
     });
   } catch (error) {
     return response.status(400).json({
