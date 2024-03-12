@@ -1,6 +1,8 @@
 const UserModel = require("../model/UserModel");
 const bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken");
 
+// signUpUser
 const signUpUser = async (request, response) => {
   const { username, email, password } = request.body;
   try {
@@ -18,9 +20,17 @@ const signUpUser = async (request, response) => {
           message: "user not created",
         });
       }
+      const token = await jwt.sign(
+        { userId: newUser._id, userEmail: newUser.email },
+        "secret",
+        {
+          expiresIn: "24h",
+        }
+      );
       return response.status(201).json({
         message: "user created",
         user: newUser,
+        jwt: token,
       });
     }
     return response.status(200).json({
@@ -34,4 +44,39 @@ const signUpUser = async (request, response) => {
   }
 };
 
-module.exports = { signUpUser };
+// signInUser
+const signInUser = async (request, response) => {
+  const { email, password } = request.body;
+
+  try {
+    const user = await UserModel.findOne({ email });
+    if (!user) {
+      return response.status(401).json({
+        message: "user not found",
+      });
+    }
+    const authUser = await bcrypt.compare(password, user.password);
+    if (!authUser) {
+      return response.status(401).json({
+        message: "incorrect password",
+      });
+    }
+    const token = await jwt.sign(
+      { userId: user._id, usrEmail: user.email },
+      "secret",
+      { expiresIn: "24h" }
+    );
+
+    return response.status(201).json({
+      message: "user loggedIn",
+      jwt: token,
+    });
+  } catch (error) {
+    return response.status(400).json({
+      message: "error occur",
+      error: error.message,
+    });
+  }
+};
+
+module.exports = { signUpUser, signInUser };
