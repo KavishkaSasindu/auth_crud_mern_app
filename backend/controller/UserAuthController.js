@@ -82,4 +82,11 @@ const signInUser = async (request, response) => {
   }
 };
 
-module.exports = { signUpUser, signInUser };
+// dashboard
+const dashboard = async (request, response) => {
+  return response.status(200).json({
+    message: "Hello User",
+  });
+};
+
+module.exports = { signUpUser, signInUser, dashboard };
